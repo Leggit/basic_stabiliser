@@ -1,7 +1,7 @@
 #include "config.h"
 #include "imu/imu.h"
 #include "pid/pid.h"
-#include "pid_tuner.h"
+#include "web_control_panel/web_control_panel.h"
 #include <Arduino.h>
 #include <ESP32Servo.h>
 #include <FlyskyIBUS.h>
@@ -41,7 +41,8 @@ void setup() {
   Wire.begin();
 
   webControlPanel.init(&pitchPID, &rollPID);
-  webControlPanel.loadPIDGains(KP_PITCH, KI_PITCH, KD_PITCH, KP_ROLL, KI_ROLL, KD_ROLL);
+  webControlPanel.loadPIDGains(KP_PITCH, KI_PITCH, KD_PITCH, KP_ROLL, KI_ROLL,
+                               KD_ROLL);
 
   showSetupInProgress();
   setupRc();
@@ -65,13 +66,13 @@ void loop() {
 
   uint16_t stabilizationSwitch = ibus.getChannel(SWITCH_STABILIZATION);
   uint16_t configModeSwitch = ibus.getChannel(SWITCH_CONFIG_MODE);
-  
+
   webControlPanel.update(configModeSwitch);
 
   if (loopCounter % 5 == 0) {
     loopCounter = 0;
     bool stabilizationEnabled = stabilizationSwitch > 1500;
-    
+
     if (stabilizationEnabled) {
       elevatorServo.writeMicroseconds(
           convertPIDOutputToMicroseconds(correctedPitchOutput));
