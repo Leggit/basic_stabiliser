@@ -61,8 +61,10 @@ void loop() {
   float desiredPitch = calculateDesiredAngle(ibus.getChannel(ELEVATOR_CHANNEL));
   float desiredRoll = calculateDesiredAngle(ibus.getChannel(AILERON_CHANNEL));
 
-  float correctedPitchOutput = pitchPID.update(desiredPitch, imu.getPitch());
-  float correctedRollOutput = rollPID.update(desiredRoll * -1, imu.getRoll());
+  float correctedPitchOutput =
+      pitchPID.update(desiredPitch, imu.getPitch(), dt);
+  float correctedRollOutput =
+      rollPID.update(desiredRoll * -1, imu.getRoll(), dt);
 
   uint16_t stabilizationSwitch = ibus.getChannel(SWITCH_STABILIZATION);
   uint16_t configModeSwitch = ibus.getChannel(SWITCH_CONFIG_MODE);

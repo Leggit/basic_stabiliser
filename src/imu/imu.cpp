@@ -48,17 +48,35 @@ void IMU::convert() {
 }
 
 void IMU::computeAngles(float dt) {
-  // --- Accelerometer angles ---
-  float accelRoll = atan2(ay, az) * 180.0f / M_PI;
-  float accelPitch = atan2(-ax, sqrt(ay * ay + az * az)) * 180.0f / M_PI;
-
-  // --- Gyro integration ---
+  // --- Gyro integration with yaw correction ---
+  float yawCorrection =
+      sin(gz * dt * M_PI / 180.0f); // yaw effect on pitch/roll
   roll += gx * dt;
   pitch += gy * dt;
+  pitch += roll * yawCorrection;
+  roll -= pitch * yawCorrection;
 
-  // --- Complementary filter ---
-  const float alpha = 0.98f;
+  // --- Accelerometer angles (only if accel is valid) ---
+  float accelMagnitude = sqrt(ax * ax + ay * ay + az * az);
+  float accelRoll = 0, accelPitch = 0;
 
+  // Only trust accel if magnitude is close to 1g (0.6 to 1.4g range)
+  // This rejects high-G maneuvers and centripetal acceleration
+  if (accelMagnitude > 0.6f && accelMagnitude < 1.4f) {
+    // Use proper 2-axis atan2 for more accurate accel angles
+    // Roll: rotation about X-axis (use Y and Z)
+    accelRoll = atan2(ay, az) * 180.0f / M_PI;
+    // Pitch: rotation about Y-axis (use X and Z)
+    accelPitch = atan2(-ax, sqrt(ay * ay + az * az)) * 180.0f / M_PI;
+  } else {
+    // High-G detected, trust gyro only
+    accelPitch = pitch;
+    accelRoll = roll;
+  }
+
+  // --- Complementary filter (3% accel, 97% gyro) ---
+  // Higher accel weight corrects gyro drift more effectively
+  const float alpha = 0.97f;
   pitch = alpha * pitch + (1.0f - alpha) * accelPitch;
   roll = alpha * roll + (1.0f - alpha) * accelRoll;
 }

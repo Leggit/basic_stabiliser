@@ -14,11 +14,11 @@ void PID::setGains(float kp, float ki, float kd) {
   this->kd = kd;
 }
 
-float PID::update(float setpoint, float measurement, bool log) {
+float PID::update(float setpoint, float measurement, float dt, bool log) {
   float error = setpoint - measurement;
 
   if (error > -20 && error < 20) {
-    integral = integral + error;
+    integral = constrain((integral + error), -INTEGRAL_MAX, INTEGRAL_MAX);
   } else {
     integral = 0;
   }
@@ -27,6 +27,8 @@ float PID::update(float setpoint, float measurement, bool log) {
   float derivative = error - prevError;
 
   if (log) {
+    Serial.print("Error:");
+    Serial.print(error);
     Serial.print("P:");
     Serial.print(kp * error);
     Serial.print(",I:");
