@@ -32,6 +32,10 @@ void setupRc();
 void setupServos();
 float calculateDesiredAngle(uint16_t msValue);
 long convertPIDOutputToMicroseconds(float pidOutput);
+long mixManualElevon(uint16_t elevatorInput, uint16_t aileronInput,
+                     int8_t pitchSign, int8_t rollSign);
+long mixStabilizedElevon(float pitchOutput, float rollOutput, int8_t pitchSign,
+                         int8_t rollSign);
 
 void setup() {
   Serial.begin(115200);
@@ -52,9 +56,8 @@ void setup() {
 }
 
 void loop() {
-  unsigned long now = micros();
-  float dt = (now - timer) / 1000000.0f; // seconds
-  timer = now;
+  const float now = micros();
+  const float dt = 0.004f;
 
   imu.update(dt);
 
@@ -68,6 +71,7 @@ void loop() {
 
   uint16_t stabilizationSwitch = ibus.getChannel(SWITCH_STABILIZATION);
   uint16_t configModeSwitch = ibus.getChannel(SWITCH_CONFIG_MODE);
+  uint16_t flaperon_switch = ibus.getChannel(FLAPS_CHANNEL);
 
   webControlPanel.update(configModeSwitch);
 
@@ -75,7 +79,30 @@ void loop() {
     loopCounter = 0;
     bool stabilizationEnabled = stabilizationSwitch > 1500;
 
-    if (stabilizationEnabled) {
+    if (ENABLE_ELEVONS) {
+      elevatorServo.writeMicroseconds(1500);
+
+      if (stabilizationEnabled) {
+        aileron1Servo.writeMicroseconds(
+            mixStabilizedElevon(correctedPitchOutput, correctedRollOutput,
+                                ELEVON_1_PITCH_SIGN, ELEVON_1_ROLL_SIGN));
+        aileron2Servo.writeMicroseconds(
+            mixStabilizedElevon(correctedPitchOutput, correctedRollOutput,
+                                ELEVON_2_PITCH_SIGN, ELEVON_2_ROLL_SIGN));
+      } else {
+        uint16_t elevator_input =
+            constrain(ibus.getChannel(ELEVATOR_CHANNEL), 1000, 2000);
+        uint16_t aileron_input =
+            constrain(ibus.getChannel(AILERON_CHANNEL), 1000, 2000);
+
+        aileron1Servo.writeMicroseconds(
+            mixManualElevon(elevator_input, aileron_input, ELEVON_1_PITCH_SIGN,
+                            ELEVON_1_ROLL_SIGN));
+        aileron2Servo.writeMicroseconds(
+            mixManualElevon(elevator_input, aileron_input, ELEVON_2_PITCH_SIGN,
+                            ELEVON_2_ROLL_SIGN));
+      }
+    } else if (stabilizationEnabled) {
       elevatorServo.writeMicroseconds(
           convertPIDOutputToMicroseconds(correctedPitchOutput));
       aileron1Servo.writeMicroseconds(
@@ -84,13 +111,23 @@ void loop() {
           convertPIDOutputToMicroseconds(correctedRollOutput * -1));
 
     } else {
-      // manual
       elevatorServo.writeMicroseconds(
           constrain(ibus.getChannel(ELEVATOR_CHANNEL), 1000, 2000));
+
+      uint16_t aileron_input =
+          constrain(ibus.getChannel(AILERON_CHANNEL), 1000, 2000);
+
+      int16_t flaperon_offset = 0;
+      if (flaperon_switch > FLAPS_FULL_US) {
+        flaperon_offset = FLAPS_FULL_OFFSET_US;
+      } else if (flaperon_switch > FLAPS_HALF_US) {
+        flaperon_offset = FLAPS_HALF_OFFSET_US;
+      }
+
       aileron1Servo.writeMicroseconds(
-          constrain(ibus.getChannel(AILERON_CHANNEL), 1000, 2000));
+          constrain(aileron_input + flaperon_offset, 1000, 2000));
       aileron2Servo.writeMicroseconds(
-          constrain(ibus.getChannel(AILERON_CHANNEL), 1000, 2000));
+          constrain(aileron_input - flaperon_offset, 1000, 2000));
     }
   }
 
@@ -108,11 +145,28 @@ float calculateDesiredAngle(uint16_t msValue) {
   if (msValue > 1450 && msValue < 1550)
     return 0;
   else
-    return (msValue - 1500) / 9.0f * -1;
+    return (msValue - 1500) / 15.0f * -1;
 }
 
 long convertPIDOutputToMicroseconds(float pidOutput) {
-  return constrain(1500 + pidOutput * -8, 1000, 2000);
+  return constrain(1500 + pidOutput * -5, 1000, 2000);
+}
+
+long mixManualElevon(uint16_t elevatorInput, uint16_t aileronInput,
+                     int8_t pitchSign, int8_t rollSign) {
+  const int16_t pitchInput = static_cast<int16_t>(elevatorInput) - 1500;
+  const int16_t rollInput = static_cast<int16_t>(aileronInput) - 1500;
+
+  return constrain(1500 + pitchInput * pitchSign + rollInput * rollSign, 1000,
+                   2000);
+}
+
+long mixStabilizedElevon(float pitchOutput, float rollOutput, int8_t pitchSign,
+                         int8_t rollSign) {
+  const float mixedOutput =
+      (pitchOutput * pitchSign + rollOutput * rollSign) * -5;
+
+  return constrain(1500 + mixedOutput, 1000, 2000);
 }
 
 void setupRc() {

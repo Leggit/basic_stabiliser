@@ -12,7 +12,8 @@ public:
 private:
   float kp, ki, kd;
   float integral;
-  float prevError;
+  float derivative;
+  float prevMeasurement;
   float lastOutput;
 
   // Anti-windup settings

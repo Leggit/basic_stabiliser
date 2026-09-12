@@ -9,12 +9,24 @@ constexpr uint8_t RUDDER_SERVO_PIN = 25;
 constexpr uint8_t AILERON_1_SERVO_PIN = 26;
 constexpr uint8_t AILERON_2_SERVO_PIN = 27;
 
+// Set true for a flying-wing/elevon airframe and rebuild the firmware.
+constexpr bool ENABLE_ELEVONS = true;
+constexpr int8_t ELEVON_1_PITCH_SIGN = 1;
+constexpr int8_t ELEVON_1_ROLL_SIGN = -1;
+constexpr int8_t ELEVON_2_PITCH_SIGN = -1;
+constexpr int8_t ELEVON_2_ROLL_SIGN = -1;
+
 constexpr uint8_t ELEVATOR_CHANNEL = 1;
 constexpr uint8_t RUDDER_CHANNEL = 3;
 constexpr uint8_t AILERON_CHANNEL = 0;
 constexpr uint8_t SWITCH_STABILIZATION = 4;
 constexpr uint8_t SWITCH_CONFIG_MODE = 5;
 constexpr uint8_t FLAPS_CHANNEL = 6;
+
+constexpr uint16_t FLAPS_FULL_US = 1700;
+constexpr uint16_t FLAPS_FULL_OFFSET_US = 300;
+constexpr uint16_t FLAPS_HALF_US = 1300;
+constexpr uint16_t FLAPS_HALF_OFFSET_US = 150;
 
 constexpr bool CALIBRATE_GYRO_ON_STARTUP = false;
 

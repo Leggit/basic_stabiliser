@@ -48,13 +48,8 @@ void IMU::convert() {
 }
 
 void IMU::computeAngles(float dt) {
-  // --- Gyro integration with yaw correction ---
-  float yawCorrection =
-      sin(gz * dt * M_PI / 180.0f); // yaw effect on pitch/roll
   roll += gx * dt;
   pitch += gy * dt;
-  pitch += roll * yawCorrection;
-  roll -= pitch * yawCorrection;
 
   // --- Accelerometer angles (only if accel is valid) ---
   float accelMagnitude = sqrt(ax * ax + ay * ay + az * az);
@@ -74,9 +69,7 @@ void IMU::computeAngles(float dt) {
     accelRoll = roll;
   }
 
-  // --- Complementary filter (3% accel, 97% gyro) ---
-  // Higher accel weight corrects gyro drift more effectively
-  const float alpha = 0.97f;
+  const float alpha = 0.996f;
   pitch = alpha * pitch + (1.0f - alpha) * accelPitch;
   roll = alpha * roll + (1.0f - alpha) * accelRoll;
 }

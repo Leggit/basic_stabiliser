@@ -1,11 +1,11 @@
 #include "PID.h"
 
 PID::PID(float kp, float ki, float kd)
-    : kp(kp), ki(ki), kd(kd), integral(0.0f), prevError(0.0f) {}
+    : kp(kp), ki(ki), kd(kd), integral(0.0f), prevMeasurement(0.0f) {}
 
 void PID::reset() {
   integral = 0.0f;
-  prevError = 0.0f;
+  prevMeasurement = 0.0f;
 }
 
 void PID::setGains(float kp, float ki, float kd) {
@@ -17,31 +17,22 @@ void PID::setGains(float kp, float ki, float kd) {
 float PID::update(float setpoint, float measurement, float dt, bool log) {
   float error = setpoint - measurement;
 
-  if (error > -20 && error < 20) {
-    integral = constrain((integral + error), -INTEGRAL_MAX, INTEGRAL_MAX);
-  } else {
-    integral = 0;
+  // --- Integral ---
+  if (fabs(error) < 20.0f) {
+    integral += error;
+    integral = constrain(integral, -INTEGRAL_MAX, INTEGRAL_MAX);
   }
 
-  // --- Derivative ---
-  float derivative = error - prevError;
+  // --- Derivative (on measurement) ---
+  float rawDerivative = -(measurement - prevMeasurement);
 
-  if (log) {
-    Serial.print("Error:");
-    Serial.print(error);
-    Serial.print("P:");
-    Serial.print(kp * error);
-    Serial.print(",I:");
-    Serial.print(ki * integral);
-    Serial.print(",D:");
-    Serial.print(kd * derivative);
-    Serial.print(",Total:");
-    Serial.println((kp * error) + (ki * integral) + (kd * derivative));
-  }
+  // Optional: filter it (HIGHLY recommended)
+  derivative = 0.9f * derivative + 0.1f * rawDerivative;
+
   // --- PID output ---
   float output = (kp * error) + (ki * integral) + (kd * derivative);
 
-  prevError = error;
+  prevMeasurement = measurement;
 
   return output;
 }
