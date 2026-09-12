@@ -1,4 +1,5 @@
 #include "IMU.h"
+#include <Arduino.h>
 #include <math.h>
 
 IMU::IMU() : pitch(0), roll(0) {}
@@ -21,6 +22,18 @@ bool IMU::begin(const bool calibrate) {
     if (calibrate)
       calibrateGyro();
     setStartAngles();
+
+    Serial.println("IMU initialized successfully");
+    Serial.print("Gyro X Bias: ");
+    Serial.println(calibrationData.gyroXBias);
+    Serial.print("Gyro Y Bias: ");
+    Serial.println(calibrationData.gyroYBias);
+    Serial.print("Gyro Z Bias: ");
+    Serial.println(calibrationData.gyroZBias);
+    Serial.print("Initial Pitch: ");
+    Serial.println(pitch);
+    Serial.print("Initial Roll: ");
+    Serial.println(roll);
   }
 
   return connected;

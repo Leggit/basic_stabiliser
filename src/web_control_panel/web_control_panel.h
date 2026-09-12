@@ -10,7 +10,7 @@ public:
   ~WebControlPanel();
 
   void init(PID *pitchPID, PID *rollPID);
-  void update(uint16_t switchValue);
+  void update(bool configModeEnabled);
 
   float getKpPitch() const { return kp_pitch; }
   float getKiPitch() const { return ki_pitch; }

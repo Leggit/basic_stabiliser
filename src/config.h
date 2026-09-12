@@ -35,9 +35,9 @@ constexpr uint8_t LED_PIN = 15;
 // constexpr int8_t PITCH_SIGN_CORRECTION = 1;
 // constexpr int8_t ROLL_SIGN_CORRECTION = -1;
 
-constexpr float KP_ROLL = 2.5f;
-constexpr float KI_ROLL = 0.15f;
-constexpr float KD_ROLL = 0.8f;
-constexpr float KP_PITCH = 2.5f;
-constexpr float KI_PITCH = 0.15f;
-constexpr float KD_PITCH = 0.8f;
+constexpr float KP_ROLL = 1.0f;
+constexpr float KI_ROLL = 0.0f;
+constexpr float KD_ROLL = 0.02f;
+constexpr float KP_PITCH = 1.0f;
+constexpr float KI_PITCH = 0.0f;
+constexpr float KD_PITCH = 0.02f;

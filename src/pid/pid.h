@@ -14,11 +14,9 @@ private:
   float integral;
   float derivative;
   float prevMeasurement;
-  float lastOutput;
+  bool hasPreviousMeasurement;
 
-  // Anti-windup settings
-  static constexpr float INTEGRAL_MAX = 25.0f; // Max integral accumulation
-  static constexpr float ERROR_THRESHOLD =
-      15.0f; // Only accumulate I for errors within this
-  static constexpr float OUTPUT_SATURATION = 100.0f; // Servo command limits
+  static constexpr float INTEGRAL_MAX = 25.0f;
+  static constexpr float ERROR_THRESHOLD = 15.0f;
+  static constexpr float OUTPUT_SATURATION = 100.0f;
 };

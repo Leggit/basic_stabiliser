@@ -35,9 +35,7 @@ void WebControlPanel::loadPIDGains(float default_kp_pitch,
   updatePIDGains();
 }
 
-void WebControlPanel::update(uint16_t configModeSwitch) {
-  bool configModeEnabled = configModeSwitch > 1500;
-
+void WebControlPanel::update(bool configModeEnabled) {
   if (configModeEnabled && !wifiEnabled) {
     enableWiFi();
   } else if (!configModeEnabled && wifiEnabled) {
